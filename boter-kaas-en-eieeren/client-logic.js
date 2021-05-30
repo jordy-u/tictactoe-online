@@ -56,7 +56,19 @@ websocket.addEventListener("message", e => {
 	switch(data.type) {
 		case "changeGameState":
 			document.getElementById("gameState").innerHTML = `<a style="font-weight: bold;">Game state:</a> ${GAME_STATE_USER_FRIENDLY[data.newState]}`;
-			document.getElementById("playerTurn").innerHTML = `<a style="font-weight: bold;">Aan de beurt:</a> ${PLAYER_SYMBOLS[data.playerTurn]}`
+
+			if (data.newState === GAME_STATE.GAME_ACTIVE) {
+				document.getElementById("playerTurn").innerHTML = `<a style="font-weight: bold;">Aan de beurt:</a> ${PLAYER_SYMBOLS[data.playerTurn]}`
+				for (var i = 0; i < buttons.length; i++) {
+					buttons[i].innerHTML = "";
+				}
+				rematchBtn.style.display = "none";
+			}
+
+			if (data.newState === GAME_STATE.WAITING_FOR_REMATCH) {
+				M.toast({html: "Het spel is afgelopen.", classes: "green darken-3"})
+				rematchBtn.style.display = "block";
+			}
 			break;
 			case "playerData":
 			player = data.playerData.status;
@@ -98,7 +110,20 @@ const pressBtn = function() {
 }
 
 var buttons = document.getElementsByClassName("boterkaaseieren_btn");
+const rematchBtn = document.getElementById("rematch_btn");
 
 for (var i = 0; i < buttons.length; i++) {
 	buttons[i].addEventListener('click', pressBtn, false);
 }
+
+const rematchBtn_click = function() {
+	console.log(`Rematch button clicked`);
+
+	const rematchEvent = {
+		type : "rematch",
+	}
+	websocket.send(JSON.stringify(rematchEvent));
+	
+}
+
+rematchBtn.addEventListener('click', rematchBtn_click, false);

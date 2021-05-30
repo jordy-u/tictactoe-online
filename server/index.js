@@ -1,5 +1,5 @@
 const WebSocket = require("ws");
-// const TicTacToe  = require('tictactoe_model');
+const TicTacToe  = require('tictactoe_model');
 
 const GAME_STATE = {
 	WAITING_FOR_2_PLAYERS : 1,
@@ -19,6 +19,18 @@ const SYMBOL = {
 	2 : "X",
 }
 
+const LOCATION_ID = {
+	1 : [0,0],
+	2 : [0,1],
+	3 : [0,2],
+	4 : [1,0],
+	5 : [1,1],
+	6 : [1,2],
+	7 : [2,0],
+	8 : [2,1],
+	9 : [2,2],
+}
+
 const websocketServer = new WebSocket.Server({port:8082});
 
 let aantalVerbindingen = 0;
@@ -35,7 +47,7 @@ let players = {
 		symbol : "❎",
 	},
 };
-// const ticTacToe = new TicTacToe();
+let ticTacToe = null;
 
 function broadcastMessage(message) {
 	clients.forEach(function(client) {
@@ -82,6 +94,7 @@ websocketServer.on("connection", websocketConnection => {
 	if (gameState == GAME_STATE.WAITING_FOR_2_PLAYERS && aantalVerbindingen >= 2) {
 		gameState = GAME_STATE.GAME_ACTIVE;
 
+		ticTacToe = new TicTacToe();
 		playerTurn = Math.round(Math.random()+1);
 
 		broadcastMessage(JSON.stringify({
@@ -120,30 +133,28 @@ websocketServer.on("connection", websocketConnection => {
 					break;
 				}
 
-				// if (board.isMoveValid(data.location)) {
-				// 	websocketConnection.send(JSON.stringify({
-				// 		type : "message",
-				// 		class : "red darken-3",
-				// 		message : "Ongeldige locatie"
-				// 	}));
-				// 	break;
-				// }
+				if (data.location < 1 || data.location > 9) {
+					websocketConnection.send(JSON.stringify({
+						type : "message",
+						class : "red darken-3",
+						message : "Ongeldige locatie"
+					}));
+					break;
+				}
 
-				// if (board.isPositionTaken(data.location)) {
-				// 	websocketConnection.send(JSON.stringify({
-				// 		type : "message",
-				// 		class : "gray darken-3",
-				// 		message : "Locatie al bezet"
-				// 	}));
-				// 	break;
-				// }
+				const coordinates = LOCATION_ID[data.location];
+				const moveSuccesful = ticTacToe.move(...coordinates)
 
-				// const boardString = board.makeMove(data.location, SYMBOL[data.player]);
+				if (!moveSuccesful) {
+					websocketConnection.send(JSON.stringify({
+						type : "message",
+						class : "gray darken-3",
+						message : "Locatie al bezet"
+					}));
+					break;
+				}
 
-				// ticTacToe.move(0, 0);
-
-				// console.debug(ticTacToe.turn());
-				// console.debug(ticTacToe.squares());
+				console.debug(moveSuccesful);
 
 				const selectTileEvent = {
 					type : "tileSelected",
@@ -158,6 +169,17 @@ websocketServer.on("connection", websocketConnection => {
 				// Doe zet
 				// Check of iemand gewonnen heeft
 				broadcastMessage(JSON.stringify(selectTileEvent));
+
+				if (ticTacToe.isDone()) {
+					const winner = ticTacToe.winner()+1;
+					gameState = GAME_STATE.WAITING_FOR_REMATCH;
+
+					broadcastMessage(JSON.stringify({
+						type : "changeGameState",
+						newState : gameState,
+						playerTurn : null
+					}));
+				}
 				break;
 			case "skip":
 				const skipEvent = {
@@ -167,12 +189,32 @@ websocketServer.on("connection", websocketConnection => {
 				broadcastMessage(JSON.stringify(skipEvent));
 				break;
 			case "rematch":
+				if (gameState !== GAME_STATE.WAITING_FOR_REMATCH) {
+					websocketConnection.send(JSON.stringify({
+						type : "message",
+						class : "red darken-3",
+						message : "Rematch niet mogelijk. Spel is nog niet afgelopen."
+					}));
+					break;
+				}
+
+				gameState = GAME_STATE.GAME_ACTIVE;
+				ticTacToe = new TicTacToe();
+				playerTurn = Math.round(Math.random()+1);
+
+				broadcastMessage(JSON.stringify({
+					type : "changeGameState",
+					newState : gameState,
+					playerTurn : playerTurn,
+				}));
 				break;
 			default:
 				console.error(`Message with unknown type recieved: ${data.type}`);
 				break;
 		}
 
+		//Show board
+		console.debug(ticTacToe.squares());
 		
 	})
 
