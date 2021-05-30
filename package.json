@@ -4,12 +4,15 @@
   "description": "Dit is een test om websockets te leren.",
   "main": "index.js",
   "scripts": {
-    "start": "node ./index.js",
+    "start": "npm-run-all --parallel node-server http-server",
+    "node-server": "node ./index.js",
+    "http-server": "npx http-server ./html",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "J.M. Ubink",
   "license": "MIT",
   "dependencies": {
+    "npm-run-all": "^4.1.5",
     "tictactoe_model": "^1.0.4",
     "ws": "^7.4.6"
   }
