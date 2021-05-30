@@ -48,8 +48,7 @@ let mySymbol = null;
 let opponentSymbol = null
 let hostSymbol = null;
 let participantSymbol = null;
-const websocket = new WebSocket("ws://thuis.jordyu.nl:8082");
-// const websocket = new WebSocket("ws://localhost:8082");
+const websocket = new WebSocket(`${serverParameters["websocket-protocol"]}://${window.location.hostname}:${serverParameters["websocket-port"]}`);
 
 websocket.addEventListener("open", () => {
 	console.log("connected");

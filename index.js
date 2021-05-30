@@ -1,3 +1,4 @@
+const serverParameters = require("./html/parameters");
 const WebSocket = require("ws");
 const TicTacToe  = require('tictactoe_model');
 
@@ -38,7 +39,7 @@ const LOCATION_ID = {
 	9 : [2,2],
 }
 
-const websocketServer = new WebSocket.Server({port:8082});
+const websocketServer = new WebSocket.Server({port:serverParameters["websocket-port"]});
 
 let aantalVerbindingen = 0;
 let gameState = null;
