@@ -34,20 +34,30 @@ const LOCATION_ID = {
 const websocketServer = new WebSocket.Server({port:8082});
 
 let aantalVerbindingen = 0;
-let gameState = GAME_STATE.WAITING_FOR_2_PLAYERS;
-let clients = [];
-let playerTurn = 0;
-let players = {
-	player1 : {
-		websocketConnection : null,
-		symbol : "⭕",
-	},
-	player2 : {
-		websocketConnection : null,
-		symbol : "❎",
-	},
-};
+let gameState = null;
+let clients = null;
+let playerTurn = null;
+let players = null;
 let ticTacToe = null;
+
+const initialiseGame = () => {
+	gameState = GAME_STATE.WAITING_FOR_2_PLAYERS;
+	clients = [];
+	playerTurn = null;
+	players = {
+		player1 : {
+			websocketConnection : null,
+			symbol : "⭕",
+		},
+		player2 : {
+			websocketConnection : null,
+			symbol : "❎",
+		},
+	};
+	ticTacToe = new TicTacToe();
+};
+
+initialiseGame();
 
 function broadcastMessage(message) {
 	clients.forEach(function(client) {
@@ -68,6 +78,7 @@ websocketServer.on("connection", websocketConnection => {
 
 	switch(aantalVerbindingen) {
 		case 1:
+			// initialiseGame();
 			websocketConnection.playerType = PLAYER_TYPE.HOST;
 			break;
 		case 2:
@@ -220,6 +231,11 @@ websocketServer.on("connection", websocketConnection => {
 
 	websocketConnection.on("close", () => {
 		console.log("Disconnected");
+		aantalVerbindingen--;
+
+		if (aantalVerbindingen === 0) {
+			initialiseGame();
+		}
 	});
 });
 
