@@ -1,0 +1,15 @@
+{
+  "name": "boterkaaseieren",
+  "version": "1.0.0",
+  "description": "Dit is een test om websockets te leren.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./index.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "J.M. Ubink",
+  "license": "MIT",
+  "dependencies": {
+    "ws": "^7.4.6"
+  }
+}
