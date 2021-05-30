@@ -6,7 +6,7 @@
 # docker build --tag boter-kaas-en-eieren .
 
 # Third: Run the container. Example command:
-# docker run -p 8082:8082 -p 8080:8080 boter-kaas-en-eieren
+# docker run -d -p 8082:8082 -p 8080:8080 --name boter boter-kaas-en-eieren
 
 FROM node:12.18.1
 ENV NODE_ENV=production

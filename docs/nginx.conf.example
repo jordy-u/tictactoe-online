@@ -1,0 +1,31 @@
+# This is an example configuration for Nginx.
+# If you're using docker, you can use this file to reverse proxy the application.
+# After this, use certbot to automatically use SSL for the application.
+# https://certbot.eff.org/lets-encrypt/ubuntufocal-nginx
+
+#websocket
+server {
+    server_name subdomain.domain.topdomain;
+
+    location / {
+        proxy_pass http://localhost:8082;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+    }
+
+    listen 8083;
+
+}
+
+#webserver
+server {
+    server_name subdomain.domain.topdomain;
+	
+    location / {
+        proxy_pass http://localhost:8080;
+    }
+
+    listen 80;
+}
