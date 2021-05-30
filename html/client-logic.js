@@ -85,6 +85,25 @@ websocket.addEventListener("message", e => {
 		case "message":
 			M.toast({html: data.message, classes: data.class})
 			break;
+		case "syncBoardState":
+			console.debug(data.board);
+			for (let x = 0; x <= 2; x++) {
+				for (let y = 0; y <= 2; y++) {
+					let location = x + y*3;
+					console.log(`X: ${x}, Y: ${y}, Locatie: ${location}, Symbol: ${data.board[x][y]}`);
+					if (data.board[y][x] === null)
+						continue;
+					if (data.board[y][x] === "O") {
+						buttons[location].innerHTML = PLAYER_SYMBOLS[1];
+						continue;
+					}
+					if (data.board[y][x] === "X") {
+						buttons[location].innerHTML = PLAYER_SYMBOLS[2];
+						continue;
+					}
+				}
+			}
+			break;
 		case "debug":
 			console.debug(data);
 			break;

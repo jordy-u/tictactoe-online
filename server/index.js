@@ -107,6 +107,12 @@ websocketServer.on("connection", websocketConnection => {
 		newState : gameState,
 	}));
 
+	websocketConnection.send(JSON.stringify({
+		type : "syncBoardState",
+		board : ticTacToe.squares(),
+	}));
+	
+
 	if (gameState == GAME_STATE.GAME_ACTIVE && websocketConnection.playerType !== PLAYER_TYPE.SPECTATOR) {
 
 		broadcastMessage(JSON.stringify({
