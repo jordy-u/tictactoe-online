@@ -15,8 +15,8 @@ const PLAYER_TYPE = {
 }
 
 const SYMBOL = {
-	1 : "O",
-	2 : "X",
+	1 : "X",
+	2 : "O",
 }
 
 const PLAYER_TYPE_USER_FRIENDLY = {
@@ -54,11 +54,11 @@ const initialiseGame = () => {
 	players = {
 		player1 : {
 			websocketConnection : null,
-			symbol : "⭕",
+			symbol : "-",
 		},
 		player2 : {
 			websocketConnection : null,
-			symbol : "❎",
+			symbol : "-",
 		},
 	};
 	ticTacToe = new TicTacToe();
@@ -70,6 +70,13 @@ function broadcastMessage(message) {
 	clients.forEach(function(client) {
 		client.send(message);
 	  });
+}
+
+function randomizePlayerSymbols() {
+	playerTurn = Math.round(Math.random()+1);
+
+	players.player1.symbol = (playerTurn === 1) ? "X" : "O";
+	players.player2.symbol = (playerTurn === 2) ? "X" : "O";
 }
 
 
@@ -110,6 +117,9 @@ websocketServer.on("connection", websocketConnection => {
 	websocketConnection.send(JSON.stringify({
 		type : "syncBoardState",
 		board : ticTacToe.squares(),
+		playerTurn : playerTurn,
+		hostSymbol : players.player1.symbol,
+		participantSymbol : players.player2.symbol,
 	}));
 	
 
@@ -126,12 +136,20 @@ websocketServer.on("connection", websocketConnection => {
 		gameState = GAME_STATE.GAME_ACTIVE;
 
 		ticTacToe = new TicTacToe();
-		playerTurn = Math.round(Math.random()+1);
+		
+		randomizePlayerSymbols();
 
 		broadcastMessage(JSON.stringify({
 			type : "changeGameState",
 			newState : gameState,
-			playerTurn : playerTurn
+		}));
+
+		broadcastMessage(JSON.stringify({
+			type : "syncBoardState",
+			board : ticTacToe.squares(),
+			playerTurn : playerTurn,
+			hostSymbol : players.player1.symbol,
+			participantSymbol : players.player2.symbol,
 		}));
 	}
 
@@ -188,6 +206,7 @@ websocketServer.on("connection", websocketConnection => {
 					type : "tileSelected",
 					location : data.location,
 					player : data.player,
+					symbol : (websocketConnection.playerType === PLAYER_TYPE.HOST) ? players.player1.symbol : players.player2.symbol,
 				}
 
 				playerTurn = (playerTurn == PLAYER_TYPE.HOST) ? PLAYER_TYPE.PARTICIPANT : PLAYER_TYPE.HOST;
@@ -228,12 +247,20 @@ websocketServer.on("connection", websocketConnection => {
 
 				gameState = GAME_STATE.GAME_ACTIVE;
 				ticTacToe = new TicTacToe();
-				playerTurn = Math.round(Math.random()+1);
+				randomizePlayerSymbols();
 
 				broadcastMessage(JSON.stringify({
 					type : "changeGameState",
 					newState : gameState,
 					playerTurn : playerTurn,
+				}));
+
+				broadcastMessage(JSON.stringify({
+					type : "syncBoardState",
+					board : ticTacToe.squares(),
+					playerTurn : playerTurn,
+					hostSymbol : players.player1.symbol,
+					participantSymbol : players.player2.symbol,
 				}));
 				break;
 			default:
