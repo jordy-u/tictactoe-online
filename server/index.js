@@ -19,6 +19,13 @@ const SYMBOL = {
 	2 : "X",
 }
 
+const PLAYER_TYPE_USER_FRIENDLY = {
+	0 : `Onbekend`,
+	1 : `Host`,
+	2 : "Deelnemer",
+	3 : "Toeschouwer 📢",
+}
+
 const LOCATION_ID = {
 	1 : [0,0],
 	2 : [0,1],
@@ -76,17 +83,15 @@ websocketServer.on("connection", websocketConnection => {
 
 	websocketConnection.playerType = PLAYER_TYPE.UNDEFINED;
 
-	switch(aantalVerbindingen) {
-		case 1:
-			// initialiseGame();
-			websocketConnection.playerType = PLAYER_TYPE.HOST;
-			break;
-		case 2:
-			websocketConnection.playerType = PLAYER_TYPE.PARTICIPANT;
-			break;
-		default:
-			websocketConnection.playerType = PLAYER_TYPE.SPECTATOR;
-			break;
+	if (players.player1.websocketConnection == null) {
+		websocketConnection.playerType = PLAYER_TYPE.HOST;
+		players.player1.websocketConnection = websocketConnection;
+	}
+	else if (players.player2.websocketConnection == null) {
+		websocketConnection.playerType = PLAYER_TYPE.PARTICIPANT;
+		players.player2.websocketConnection = websocketConnection;
+	} else {
+		websocketConnection.playerType = PLAYER_TYPE.SPECTATOR;
 	}
 
 	let playerData = {
@@ -102,6 +107,15 @@ websocketServer.on("connection", websocketConnection => {
 		newState : gameState,
 	}));
 
+	if (gameState == GAME_STATE.GAME_ACTIVE && websocketConnection.playerType !== PLAYER_TYPE.SPECTATOR) {
+
+		broadcastMessage(JSON.stringify({
+			type : "message",
+			class : "green darken-3",
+			message : `De ${PLAYER_TYPE_USER_FRIENDLY[websocketConnection.playerType]} is wedergekeerd. Het spel wordt hervat.`
+		}))
+	}
+
 	if (gameState == GAME_STATE.WAITING_FOR_2_PLAYERS && aantalVerbindingen >= 2) {
 		gameState = GAME_STATE.GAME_ACTIVE;
 
@@ -114,9 +128,6 @@ websocketServer.on("connection", websocketConnection => {
 			playerTurn : playerTurn
 		}));
 	}
-
-	
-	
 
 	websocketConnection.on("message", dataString => {
 		const data = JSON.parse(dataString);
@@ -232,6 +243,24 @@ websocketServer.on("connection", websocketConnection => {
 	websocketConnection.on("close", () => {
 		console.log("Disconnected");
 		aantalVerbindingen--;
+
+		if (websocketConnection.playerType == PLAYER_TYPE.HOST) {
+			players.player1.websocketConnection = null;
+			broadcastMessage(JSON.stringify({
+				type : "message",
+				class : "red darken-3",
+				message : "De host heef het spel verlaten."
+			}))
+		}
+
+		if (websocketConnection.playerType == PLAYER_TYPE.PARTICIPANT) {
+			players.player2.websocketConnection = null;
+			broadcastMessage(JSON.stringify({
+				type : "message",
+				class : "red darken-3",
+				message : "De deelnemer heef het spel verlaten."
+			}))
+		}
 
 		if (aantalVerbindingen === 0) {
 			initialiseGame();
