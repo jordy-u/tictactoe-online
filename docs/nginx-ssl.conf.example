@@ -1,0 +1,61 @@
+# This is an example configuration for Nginx.
+# If you're using docker, you can use this file to reverse proxy the application.
+# After this, use certbot to automatically use SSL for the application.
+# https://certbot.eff.org/lets-encrypt/ubuntufocal-nginx
+
+# Websocket
+# WS / Application port 8083 (Dockers -p 8083:8082)
+# WSS - Port 8082, where the player connects to
+server {
+    server_name subdomain.domain.topdomain;
+
+    location / {
+        proxy_pass http://localhost:8083;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+    }
+
+    listen 8082 ssl;
+
+    # listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/DIRECTORY_FOR_KEYS/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/DIRECTORY_FOR_KEYS/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+}
+
+#webserver HTTP redirect to HTTPS
+server {
+    if ($host = subdomain.domain.topdomain) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    server_name subdomain.domain.topdomain;
+    listen 80;
+}
+
+#webserver HTTPS (port 443 --SSL-tunnel--> 8080)
+server {
+
+    server_name subdomain.domain.topdomain;
+	
+    location / {
+        proxy_pass http://localhost:8080;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "Upgrade";
+        proxy_set_header Host $host;
+    }
+
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/DIRECTORY_FOR_KEYS/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/DIRECTORY_FOR_KEYS/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+
+}
