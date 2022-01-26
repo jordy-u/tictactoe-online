@@ -1,0 +1,15 @@
+version: '3'
+services:
+  boter-kaas-eieren:
+    build: .
+    ports:
+      - "8080:8080" # webserver (HTTP)
+
+      # Chose for WS or WSS.
+
+      # If you don't use WS, use 8082 as port for both the host machine and the container
+      - "8082:8082" # websocket (WS)
+
+      # If you use SSL (WSS), you need to define a different host port (like 8083) and configure port 8082 as an SSL port for port 8083
+      # See /docs/nginx-ssl.conf.example
+      # - "8083:8082" # websocket (WSS)
