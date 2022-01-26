@@ -18,3 +18,17 @@ Een boter, kaar &amp; eieren spel voor in de webbrowser. Gemaakt om ervaring op 
 > Speel je op localhost, dan hoef je niks te doen. Open html/index.html in browser (vanuit je filesystem).
 > Speel je met anderen (online), host de html-folder met een webserver (Apache/Nginx/ect.)
 5. Spelen!
+
+ ### Run with Docker
+Use one of the following 2 commando's. You need to be running this from the repository directory.
+
+**Docker run**
+```sh
+docker build --tag boter-kaas-en-eieren .
+docker run --detach -p 8080:8080 -p 8082:8082 --name boter boter-kaas-en-eieren
+```
+
+**Docker-compose**
+```sh
+docker-compose up --detach
+```
